@@ -1,6 +1,7 @@
 use glium::{implement_vertex, uniform, Surface, Texture2d};
 use std::env;
-
+use std::fs::File;
+use std::io::Read;
 use std::sync::mpsc;
 use std::thread;
 
@@ -73,9 +74,13 @@ fn main() {
     let (tx, rx) = mpsc::channel();
 
     let _img_load_handle = thread::spawn(move || {
-        let image = image::open(path.to_owned()).expect("image not found");
+        let file = File::open(&path).expect("File not found!");
+        let buf: Vec<u8> = file.bytes().map(|b| b.unwrap()).collect();
+        let format = image::guess_format(&buf).expect("Unsupported format!");
+        let image =
+            image::load_from_memory_with_format(&buf, format).expect("Failed to decode image!");
 
-        if let Some("exr") = path.split('.').last() {
+        if format == image::ImageFormat::OpenExr {
             tx.send((image.to_rgba32f(), true)).unwrap();
         } else {
             tx.send((image.to_rgba32f(), false)).unwrap();
