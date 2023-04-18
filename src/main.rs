@@ -1,4 +1,4 @@
-use glium::{implement_vertex, Surface, Texture2d, uniform};
+use glium::{implement_vertex, uniform, Surface, Texture2d};
 use std::env;
 
 use std::sync::mpsc;
@@ -11,7 +11,6 @@ struct Vertex {
 }
 
 implement_vertex!(Vertex, position, tex_coords);
-
 
 fn main() {
     let event_loop = winit::event_loop::EventLoopBuilder::new().build();
