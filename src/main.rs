@@ -98,7 +98,6 @@ fn main() {
             winit::event::Event::RedrawRequested(_window_id) => {
                 let dimensions = window.inner_size();
                 let dimensions = [dimensions.width as f32, dimensions.height as f32];
-                
                 let mut target = display.draw();
                 target.clear_color(0.0, 0.0, 0.0, 1.0);
                 if let Some(tex) = &texture {
@@ -107,11 +106,11 @@ fn main() {
                         &plane_vertex_buffer,
                         &plane_index_buffer,
                         &program,
-                        &uniform! { 
+                        &uniform! {
                                     scale: [1.0_f32, 1.0_f32],
-                                    rot: 0.0 as f32, 
+                                    rot: 0.0 as f32,
                                     loc: [0.0_f32, 0.0_f32],
-                                    dimensions: dimensions, 
+                                    dimensions: dimensions,
                                     tex: tex.sampled().magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest),
                                     is_exr: is_exr,
                                     intensity: 1.0_f32,
@@ -121,7 +120,6 @@ fn main() {
             )
             .unwrap();
                 }
-                
                 target.finish().unwrap();
             }
             winit::event::Event::MainEventsCleared => {
@@ -155,6 +153,5 @@ fn main() {
             },
             _ => (),
         };
-        
     });
 }
