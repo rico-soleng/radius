@@ -15,7 +15,9 @@ implement_vertex!(Vertex, position, tex_coords);
 
 fn main() {
     let event_loop = winit::event_loop::EventLoopBuilder::new().build();
-    let (window, display) = glium::backend::glutin::simple_winit_window(&event_loop, "Radius");
+    let (window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
+        .with_title("Radius")
+        .build(&event_loop);
 
     // Stop virtual keyboards from opening.
     window.set_ime_allowed(false);
@@ -75,16 +77,49 @@ fn main() {
 
     let _img_load_handle = thread::spawn(move || {
         let file = File::open(&path).expect("File not found!");
-        let buf: Vec<u8> = file.bytes().map(|b| b.unwrap()).collect();
-        let format = image::guess_format(&buf).expect("Unsupported format!");
-        let image =
-            image::load_from_memory_with_format(&buf, format).expect("Failed to decode image!");
+        let buf: Vec<u8> = (&file).bytes().map(|b| b.unwrap()).collect();
+        let guess = image::guess_format(&buf);
 
-        if format == image::ImageFormat::OpenExr {
-            tx.send((image.to_rgba32f(), true)).unwrap();
+        if guess.is_ok() && path.split('.').last() != Some("CR2") {
+            let format = guess.unwrap();
+            let image =
+                image::load_from_memory_with_format(&buf, format).expect("Failed to decode image!");
+
+            if format == image::ImageFormat::OpenExr {
+                tx.send((image.to_rgba32f(), true)).unwrap();
+            } else {
+                tx.send((image.to_rgba32f(), false)).unwrap();
+            }
         } else {
-            tx.send((image.to_rgba32f(), false)).unwrap();
+            let raw_image = rawloader::decode_file(&path).expect("Failed");
+            let data = &raw_image.data;
+            let bl = raw_image.blacklevels.map(|x| (x as f32) / 512.0);
+
+            let image = image::ImageBuffer::from_fn(
+                (raw_image.width / 2) as u32,
+                (raw_image.height / 2) as u32,
+                |x, y| {
+                    let tx = x * 2;
+                    let ty = y * 2;
+
+                    let p = match &data {
+                        rawloader::RawImageData::Integer(p) => (
+                            (p[((tx + 1) + ty * raw_image.width as u32) as usize] as f32) / 512.0,
+                            (p[(tx + ty * raw_image.width as u32) as usize] as f32) / 512.0,
+                            (p[(tx + (ty + 1) * raw_image.width as u32) as usize] as f32) / 512.0,
+                        ),
+                        rawloader::RawImageData::Float(p) => (
+                            p[((tx + 1) + ty * raw_image.width as u32) as usize] as f32,
+                            p[(tx + ty * raw_image.width as u32) as usize] as f32,
+                            p[(tx + (ty + 1) * raw_image.width as u32) as usize] as f32,
+                        ),
+                    };
+                    image::Rgba([p.0 - bl[0], p.1 - bl[1], p.2 - bl[2], 1.0])
+                },
+            );
+            tx.send((image, true)).unwrap();
         }
+        println!("Image!");
         proxy.send_event(()).unwrap();
     });
 
@@ -111,7 +146,7 @@ fn main() {
                                     rot: 0.0 as f32,
                                     loc: [0.0_f32, 0.0_f32],
                                     dimensions: dimensions,
-                                    tex: tex.sampled().magnify_filter(glium::uniforms::MagnifySamplerFilter::Nearest),
+                                    tex: tex.sampled().magnify_filter(glium::uniforms::MagnifySamplerFilter::Linear),
                                     is_exr: is_exr,
                                     intensity: 1.0_f32,
                                     compression_factor: 1.0_f32,
