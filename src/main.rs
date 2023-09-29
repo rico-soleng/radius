@@ -1,7 +1,5 @@
 use glium::Surface;
 use std::env;
-use std::fs::File;
-use std::io::Read;
 use std::sync::mpsc;
 use std::thread;
 
@@ -9,8 +7,9 @@ mod draw;
 use draw::Draw;
 
 mod r_image;
-use r_image::{Image, ImagePlane};
+use r_image::ImagePlane;
 
+mod imageloader;
 mod mesh;
 
 fn main() {
@@ -34,50 +33,8 @@ fn main() {
     let (tx, rx) = mpsc::channel();
 
     let _img_load_handle = thread::spawn(move || {
-        let file = File::open(&path).expect("File not found!");
-        let buf: Vec<u8> = (&file).bytes().map(|b| b.unwrap()).collect();
-        let guess = image::guess_format(&buf);
-
-        if guess.is_ok() && path.split('.').last() != Some("CR2") {
-            let format = guess.unwrap();
-            let image =
-                image::load_from_memory_with_format(&buf, format).expect("Failed to decode image!");
-
-            if format == image::ImageFormat::OpenExr {
-                tx.send((image.to_rgba32f(), true)).unwrap();
-            } else {
-                tx.send((image.to_rgba32f(), false)).unwrap();
-            }
-        } else {
-            let raw_image = rawloader::decode_file(&path).expect("Failed");
-            let data = &raw_image.data;
-            let bl = raw_image.blacklevels.map(|x| (x as f32) / 512.0);
-
-            let image = image::ImageBuffer::from_fn(
-                (raw_image.width / 2) as u32,
-                (raw_image.height / 2) as u32,
-                |x, y| {
-                    let tx = x * 2;
-                    let ty = y * 2;
-
-                    let p = match &data {
-                        rawloader::RawImageData::Integer(p) => (
-                            (p[((tx + 1) + ty * raw_image.width as u32) as usize] as f32) / 512.0,
-                            (p[(tx + ty * raw_image.width as u32) as usize] as f32) / 512.0,
-                            (p[(tx + (ty + 1) * raw_image.width as u32) as usize] as f32) / 512.0,
-                        ),
-                        rawloader::RawImageData::Float(p) => (
-                            p[((tx + 1) + ty * raw_image.width as u32) as usize] as f32,
-                            p[(tx + ty * raw_image.width as u32) as usize] as f32,
-                            p[(tx + (ty + 1) * raw_image.width as u32) as usize] as f32,
-                        ),
-                    };
-                    image::Rgba([p.0 - bl[0], p.1 - bl[1], p.2 - bl[2], 1.0])
-                },
-            );
-            tx.send((image, true)).unwrap();
-        }
-        println!("Image!");
+        let img = imageloader::open_file(path);
+        tx.send(img).unwrap();
         proxy.send_event(()).unwrap();
     });
 
@@ -103,11 +60,7 @@ fn main() {
                 window.request_redraw();
             }
             winit::event::Event::UserEvent(()) => {
-                if let Ok(img) = rx.try_recv() {
-                    let open_domain = img.1;
-                    let image = img.0;
-
-                    let img = Image { image, open_domain };
+                if let Ok(Ok(img)) = rx.try_recv() {
                     image_plane = Some(ImagePlane::new(img, display.clone()))
                 }
             }
