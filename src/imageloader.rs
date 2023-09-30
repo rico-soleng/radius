@@ -5,7 +5,6 @@ use crate::r_image;
 
 pub fn open_file(path: String) -> anyhow::Result<r_image::Image> {
     let file = File::open(&path).context("File not found!")?;
-    //let buf: Vec<u8> = (&file).bytes().map(|b| b.unwrap()).collect();
     let mut buf: Vec<u8> = Vec::new();
     (&file).read_to_end(&mut buf)?;
     let guess = image::guess_format(&buf);
