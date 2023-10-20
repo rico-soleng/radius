@@ -45,15 +45,13 @@ fn main() {
 
         match event {
             winit::event::Event::RedrawRequested(_window_id) => {
-                let dimensions = window.inner_size();
-                let dimensions = [dimensions.width as f32, dimensions.height as f32];
                 let mut target = display.draw();
                 target.clear_color(0.0, 0.0, 0.0, 1.0);
 
                 let matrix = nalgebra::Matrix2::identity();
 
                 if let Some(image_pl) = &image_plane {
-                    image_pl.draw(&mut target, dimensions, &matrix);
+                    image_pl.draw(&mut target, &matrix);
                 }
 
                 target.finish().unwrap();
