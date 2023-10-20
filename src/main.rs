@@ -50,8 +50,10 @@ fn main() {
                 let mut target = display.draw();
                 target.clear_color(0.0, 0.0, 0.0, 1.0);
 
+                let matrix = nalgebra::Matrix2::identity();
+
                 if let Some(image_pl) = &image_plane {
-                    image_pl.draw(&mut target, dimensions);
+                    image_pl.draw(&mut target, dimensions, &matrix);
                 }
 
                 target.finish().unwrap();

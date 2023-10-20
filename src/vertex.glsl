@@ -7,6 +7,7 @@ attribute vec2 position;
 uniform vec2 scale;
 uniform float rot;
 uniform vec2 loc;
+uniform mat2 mat;
 
 uniform vec2 dimensions;
         
@@ -15,10 +16,9 @@ varying vec2 v_tex_coords;
 varying float t_2;
 
 void main() {
-
-    float aspect = dimensions.x / dimensions.y;
     
-    vec2 pos0 = position * scale;
+    
+    vec2 pos0 = mat * position * scale;
     
     vec2 pos_f;
     
@@ -31,5 +31,5 @@ void main() {
     vec2 pos = pos_f;
     vec2 pos2 = pos_f;
 
-    gl_Position = vec4(pos2.x, pos2.y * aspect, 0.0, 1.0);
+    gl_Position = vec4(pos2.x, pos2.y, 0.0, 1.0);
 }

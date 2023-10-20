@@ -90,7 +90,23 @@ impl ImagePlane {
 }
 
 impl Draw for ImagePlane {
-    fn draw(&self, target: &mut glium::Frame, dimensions: [f32; 2]) {
+    fn draw(&self, target: &mut glium::Frame, dimensions: [f32; 2], matrix: &nalgebra::Matrix2<f32>) {
+        
+        let aspect_target = dimensions[0] / dimensions[1];
+        let aspect_matrix = matrix.m11 / matrix.m22;
+        let aspect_draw_area = aspect_target * aspect_matrix;
+        let aspect_image = self.texture.width() as f32 / self.texture.height() as f32;
+        
+        // This matrix ensures that the aspect ratio of the image is correct and keeps the size within a (-1, 1) boundary.
+        let m = if aspect_image >= aspect_draw_area {                
+                nalgebra::Matrix2::new(1.0,0.0,0.0,aspect_draw_area/aspect_image)
+            }else {
+                nalgebra::Matrix2::new(aspect_image/aspect_draw_area,0.0,0.0,1.0)
+            };
+        
+        // Move the image to the requested place on the target.
+        let matrix = m * matrix;
+        
         target
                     .draw(
                         &self.plane_vertex_buffer,
@@ -101,6 +117,7 @@ impl Draw for ImagePlane {
                                     rot: 0.0_f32,
                                     loc: [0.0_f32, 0.0_f32],
                                     dimensions: dimensions,
+                                    mat: *matrix.as_ref(),
                                     tex: self.texture.sampled().magnify_filter(glium::uniforms::MagnifySamplerFilter::Linear),
                                     is_exr: self.open_domain,
                                     intensity: 1.0_f32,
