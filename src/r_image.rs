@@ -1,6 +1,9 @@
 use glium::{uniform, Surface};
 
-use crate::{draw::Draw, mesh::Vertex};
+use crate::{
+    draw::Draw,
+    mesh::{Vertex, PLANE_VERTICES},
+};
 
 pub struct Image {
     pub image: image::ImageBuffer<image::Rgba<f32>, Vec<f32>>,
@@ -37,26 +40,7 @@ impl ImagePlane {
         )
         .unwrap();
 
-        let plane_vertices = vec![
-            Vertex {
-                position: [-1., -1.],
-                tex_coords: [0.0, 0.0],
-            },
-            Vertex {
-                position: [-1., 1.],
-                tex_coords: [0.0, 0.5],
-            },
-            Vertex {
-                position: [1., -1.],
-                tex_coords: [0.5, 0.0],
-            },
-            Vertex {
-                position: [1., 1.],
-                tex_coords: [0.5, 0.5],
-            },
-        ];
-
-        let plane_vertex_buffer = glium::VertexBuffer::new(&display, &plane_vertices).unwrap();
+        let plane_vertex_buffer = glium::VertexBuffer::new(&display, &PLANE_VERTICES).unwrap();
         let plane_index_buffer = glium::index::IndexBuffer::new(
             &display,
             glium::index::PrimitiveType::TrianglesList,
