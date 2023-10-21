@@ -66,6 +66,9 @@ fn main() {
             }
             winit::event::Event::WindowEvent { event, .. } => match event {
                 winit::event::WindowEvent::CloseRequested => control_flow.set_exit(),
+                winit::event::WindowEvent::Resized(new_size) => {
+                    display.resize(new_size.into());
+                }
                 _ => (),
             },
             _ => (),
