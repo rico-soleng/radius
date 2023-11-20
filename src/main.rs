@@ -32,7 +32,7 @@ fn main() {
 
     if let Some(path) = args.get(1) {
         let path = path.to_owned();
-        let filename = path.split("/").last();
+        let filename = path.split('/').last();
         if let Some(filename) = filename {
             window.set_title(format!("Radius: {}", filename).as_str());
         }
