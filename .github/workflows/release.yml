@@ -18,8 +18,7 @@ jobs:
       - name: "Strip and rename"
         run: strip target/release/radius -o target/release/radius-git-${{ github.sha }}
 
-      - uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          files: target/release/radius-git-${{ github.sha }}
+      - uses: ncipollo/release-action@v1
+        with:          
+          bodyfile: target/release/radius-git-${{ github.sha }}
 
