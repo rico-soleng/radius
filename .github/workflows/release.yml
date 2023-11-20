@@ -20,5 +20,5 @@ jobs:
 
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ github.sha }}
-          bodyfile: target/release/radius-git-${{ github.sha }}
+          tag: "0.1.0"
+          artifacts: target/release/radius-git-${{ github.sha }}
