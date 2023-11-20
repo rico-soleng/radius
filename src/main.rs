@@ -28,15 +28,23 @@ fn main() {
     let proxy = event_loop.create_proxy();
 
     let args: Vec<_> = env::args().collect();
-    let path = args.get(1).expect("ERROR: No image given!").to_owned();
-
     let (tx, rx) = mpsc::channel();
+    
+    if let Some(path) = args.get(1) {
+        let path = path.to_owned();
+        let filename = path.split("/").last();
+        if let Some(filename) = filename {
+            window.set_title(format!("Radius: {}", filename).as_str());
+        }
 
-    let _img_load_handle = thread::spawn(move || {
-        let img = imageloader::open_file(path);
-        tx.send(img).unwrap();
-        proxy.send_event(()).unwrap();
-    });
+        let _img_load_handle = thread::spawn(move || {
+            let img = imageloader::open_file(path);
+            tx.send(img).unwrap();
+            proxy.send_event(()).unwrap();
+        });
+    } else {
+        window.set_title("Radius | ERROR: No image given!");
+    }
 
     let mut image_plane: Option<ImagePlane> = None;
 
@@ -63,8 +71,12 @@ fn main() {
                 _ => (),
             },
             winit::event::Event::UserEvent(()) => {
-                if let Ok(Ok(img)) = rx.try_recv() {
-                    image_plane = Some(ImagePlane::new(img, display.clone()));
+                if let Ok(img) = rx.try_recv() {
+                    match img {
+                        Ok(img) => {image_plane = Some(ImagePlane::new(img, display.clone()));},
+                        Err(e) => {window.set_title(format!("Radius | Error: {:?}", e).as_str());},
+                    }
+                    
                 }
             },
             winit::event::Event::AboutToWait => {
