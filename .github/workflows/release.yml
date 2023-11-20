@@ -1,0 +1,25 @@
+name: "release"
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  pre-release:
+    name: "Release"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Build"
+        run: cargo build --release
+
+      - name: "Strip and rename"
+        run: strip target/release/radius -o target/release/radius-git-${{ github.sha }}
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          files: target/release/radius-git-${{ github.sha }}
+
