@@ -19,6 +19,6 @@ jobs:
     - name: Build
       run: cargo build --verbose
     - name: Run Clippy
-      run: cargo clippy
+      run: cargo clippy --all-targets
     - name: Run Rustfmt
       run: cargo fmt --check
