@@ -19,6 +19,6 @@ jobs:
         run: strip target/release/radius -o target/release/radius-git-${{ github.sha }}
 
       - uses: ncipollo/release-action@v1
-        with:          
+        with:
+          commit: ${{ github.sha }}
           bodyfile: target/release/radius-git-${{ github.sha }}
-
