@@ -20,7 +20,11 @@ pub struct ImagePlane {
 
 impl ImagePlane {
     pub fn new<
-        T: glutin::surface::SurfaceTypeTrait + glutin::surface::ResizeableSurface + 'static + glium::glutin::surface::SurfaceTypeTrait + glium::glutin::surface::ResizeableSurface,
+        T: glutin::surface::SurfaceTypeTrait
+            + glutin::surface::ResizeableSurface
+            + 'static
+            + glium::glutin::surface::SurfaceTypeTrait
+            + glium::glutin::surface::ResizeableSurface,
     >(
         image: Image,
         display: glium::Display<T>,
