@@ -20,5 +20,6 @@ jobs:
 
       - uses: ncipollo/release-action@v1
         with:
+          allowUpdates: True
           tag: "0.1.0"
           artifacts: target/release/radius-git-${{ github.sha }}
